@@ -1,0 +1,1 @@
+//cout<<static_cast<unsigned int>(data[i]) << "\n";

@@ -1,0 +1,68 @@
+#version 430 core
+layout(local_size_x = 256) in;
+
+layout(std430, binding = 0) buffer Pos {
+    uint data[];
+};
+
+uniform uint C1; uniform uint C2; uniform uint C3; uniform uint C4;
+uniform uint K1; uniform uint K2; uniform uint K3; uniform uint K4;
+uniform uint K5; uniform uint K6; uniform uint K7; uniform uint K8;
+uniform uint N1; uniform uint N2; uniform uint N3;
+
+uint rotl(uint x, int n) {
+    return (x << n) | (x >> (32 - n));
+}
+
+void QR(inout uint a, inout uint b, inout uint c, inout uint d) {
+    a += b; d ^= a; d = rotl(d, 16);
+    c += d; b ^= c; b = rotl(b, 12);
+    a += b; d ^= a; d = rotl(d, 8);
+    c += d; b ^= c; b = rotl(b, 7);
+}
+
+void main() {
+    uint id = gl_GlobalInvocationID.x;
+
+    uvec4 state[4];
+    state[0] = uvec4(C1, C2, C3, C4);
+    state[1] = uvec4(K1, K2, K3, K4);
+    state[2] = uvec4(K5, K6, K7, K8);
+    for(int b=0;b<2;b++)
+    {
+        uint counter = id*2 + b;
+        state[3] = uvec4(counter, N1, N2, N3);    
+        uvec4 working[4];
+        for (int i = 0; i < 4; i++)
+        {
+            working[i] = state[i];
+        }
+        for (int i = 0; i < 10; i++) {
+            // column
+            QR(working[0][0], working[1][0], working[2][0], working[3][0]);
+            QR(working[0][1], working[1][1], working[2][1], working[3][1]);
+            QR(working[0][2], working[1][2], working[2][2], working[3][2]);
+            QR(working[0][3], working[1][3], working[2][3], working[3][3]);
+
+            // cross misixng 
+            QR(working[0][0], working[1][1], working[2][2], working[3][3]);
+            QR(working[0][1], working[1][2], working[2][3], working[3][0]);
+            QR(working[0][2], working[1][3], working[2][0], working[3][1]);
+            QR(working[0][3], working[1][0], working[2][1], working[3][2]);
+        }
+
+       for (int i = 0; i < 4; i++)
+       {
+             working[i] += state[i];
+       }
+       uint base = id * 32;
+       uint total = data.length();
+       uint base_block = base + b*16;
+       for (int i = 0; i < 16; i++) {
+            uint idx = base_block + i;
+            if (idx >= total) break;
+            uint ks = working[i / 4][i % 4];
+            data[idx] ^= ks;
+       }
+    }
+}

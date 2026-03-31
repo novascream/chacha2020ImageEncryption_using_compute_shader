@@ -1,3 +1,10 @@
+C:\graphics-physics\chacha\depdencies\include\imgui\backends\imgui_impl_glfw.cpp;C:\graphics-physics\chacha\chacha\x64\Release\imgui_impl_glfw.obj
+C:\graphics-physics\chacha\depdencies\include\imgui\backends\imgui_impl_opengl3.cpp;C:\graphics-physics\chacha\chacha\x64\Release\imgui_impl_opengl3.obj
+C:\graphics-physics\chacha\depdencies\include\imgui\imgui.cpp;C:\graphics-physics\chacha\chacha\x64\Release\imgui.obj
+C:\graphics-physics\chacha\depdencies\include\imgui\imgui_draw.cpp;C:\graphics-physics\chacha\chacha\x64\Release\imgui_draw.obj
+C:\graphics-physics\chacha\depdencies\include\imgui\imgui_stdlib.cpp;C:\graphics-physics\chacha\chacha\x64\Release\imgui_stdlib.obj
+C:\graphics-physics\chacha\depdencies\include\imgui\imgui_tables.cpp;C:\graphics-physics\chacha\chacha\x64\Release\imgui_tables.obj
+C:\graphics-physics\chacha\depdencies\include\imgui\imgui_widgets.cpp;C:\graphics-physics\chacha\chacha\x64\Release\imgui_widgets.obj
 C:\graphics-physics\chacha\depdencies\include\openssl\applink.c;C:\graphics-physics\chacha\chacha\x64\Release\applink.obj
 C:\graphics-physics\chacha\glad.c;C:\graphics-physics\chacha\chacha\x64\Release\glad.obj
 C:\graphics-physics\chacha\main.cpp;C:\graphics-physics\chacha\chacha\x64\Release\main.obj

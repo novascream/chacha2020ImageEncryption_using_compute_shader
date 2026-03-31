@@ -138,6 +138,13 @@ shell32.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDepend
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="depdencies\include\imgui\backends\imgui_impl_glfw.cpp" />
+    <ClCompile Include="depdencies\include\imgui\backends\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="depdencies\include\imgui\imgui.cpp" />
+    <ClCompile Include="depdencies\include\imgui\imgui_draw.cpp" />
+    <ClCompile Include="depdencies\include\imgui\imgui_stdlib.cpp" />
+    <ClCompile Include="depdencies\include\imgui\imgui_tables.cpp" />
+    <ClCompile Include="depdencies\include\imgui\imgui_widgets.cpp" />
     <ClCompile Include="depdencies\include\openssl\applink.c" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="main.cpp" />
@@ -147,6 +154,16 @@ shell32.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDepend
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="depdencies\include\image_loader\img_loader.h" />
+    <ClInclude Include="depdencies\include\imgui\backends\imgui_impl_glfw.h" />
+    <ClInclude Include="depdencies\include\imgui\backends\imgui_impl_opengl3.h" />
+    <ClInclude Include="depdencies\include\imgui\imconfig.h" />
+    <ClInclude Include="depdencies\include\imgui\imgui.h" />
+    <ClInclude Include="depdencies\include\imgui\imgui_impl_opengl3_loader.h" />
+    <ClInclude Include="depdencies\include\imgui\imgui_internal.h" />
+    <ClInclude Include="depdencies\include\imgui\imgui_stdlib.h" />
+    <ClInclude Include="depdencies\include\imgui\imstb_rectpack.h" />
+    <ClInclude Include="depdencies\include\imgui\imstb_textedit.h" />
+    <ClInclude Include="depdencies\include\imgui\imstb_truetype.h" />
     <ClInclude Include="depdencies\include\openssl\aes.h" />
     <ClInclude Include="depdencies\include\openssl\asn1.h" />
     <ClInclude Include="depdencies\include\openssl\asn1err.h" />

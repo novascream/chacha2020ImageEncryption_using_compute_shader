@@ -17,8 +17,10 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include<filesystem>
 bool file_err1 = false;
 bool file_err2 = false;
+bool path_wrong_imag = false;
 bool function_pointers = false;
 void window_resize_callback(GLFWwindow* window_p, int width, int height)
 {
@@ -49,13 +51,17 @@ void load_key_nounce(const char* path, uint8_t* key, uint8_t* nounce)
     file.close();
 
 }
-void encrypt(const char* path)
+void encrypt(const char* path,int dir,int &global_index)
 {
     image_loader loaded_images = image_loader(path);
+    if (loaded_images.path_wrong)
+    {
+        path_wrong_imag = true;
+    }
     unsigned char key[32], nonce[12];
     RAND_bytes(key, 32);
     RAND_bytes(nonce, 12);
-    save_key_nounce("key.bin", key, nonce);
+    save_key_nounce(("./key_files/"+ std::to_string(dir) +"_key.bin").c_str(), key, nonce);
     uint32_t k[8], n[3];
     for (int i = 0;i < 8;i++)
     {
@@ -87,7 +93,7 @@ void encrypt(const char* path)
 
     uint32_t* ptr = (uint32_t*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
     uint8_t* bytePtr = (uint8_t*)ptr;
-    std::ofstream Encrypted_file("cb.sg", std::ios::binary);
+    std::ofstream Encrypted_file("./en_files/"+ std::to_string(dir) + ".cb", std::ios::binary);
     uint32_t count = loaded_images.img_Meta.size();
     Encrypted_file.write((char*)&count,sizeof(count));
     Encrypted_file.write((char*)loaded_images.img_Meta.data(), loaded_images.img_Meta.size() * sizeof(image_loader::Image));
@@ -99,7 +105,7 @@ void encrypt(const char* path)
         std::vector<unsigned char> encrypted(size);
         memcpy(encrypted.data(), bytePtr + loaded_images.img_Meta[i].offset, size);
         std::string num = std::to_string(i);
-        std::string filename = "./encrypted/" + std::to_string(i) + "_encrypted.png";
+        std::string filename = "./encrypted/" + std::to_string(global_index++) + "_encrypted.png";
         stbi_write_png(filename.c_str(), loaded_images.img_Meta[i].width, loaded_images.img_Meta[i].height, loaded_images.img_Meta[i].channels, encrypted.data(), loaded_images.img_Meta[i].width * loaded_images.img_Meta[i].channels);
 
     }
@@ -107,8 +113,9 @@ void encrypt(const char* path)
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
     glDeleteBuffers(1, &ssbo);
 }
-void decrypt(const char* path,const char* key_path)
+void decrypt(const char* path,const char* key_path,int &global_index)
 {
+    
     uint8_t key[32];
     uint8_t nounce[12];
     load_key_nounce(key_path, key, nounce);
@@ -126,6 +133,10 @@ void decrypt(const char* path,const char* key_path)
         memcpy(&n[i], nounce + i * 4, 4);
     }
     std::ifstream file(path, std::ios::binary);
+    if (!file)
+    {
+        std::cout << "brr";
+    }
     uint32_t count;
     file.read((char*)&count, sizeof(count));
     std::vector<image_loader::Image> meta(count);
@@ -166,7 +177,7 @@ void decrypt(const char* path,const char* key_path)
         std::vector<unsigned char> encrypted(size);
         memcpy(encrypted.data(), bytePtr + meta[i].offset, size);
         std::string num = std::to_string(i);
-        std::string filename = "./decrypted/" + std::to_string(i) + "_dencrypted.png";
+        std::string filename = "./decrypted/" + std::to_string(global_index++) + "_dencrypted.png";
         stbi_write_png(filename.c_str(), meta[i].width, meta[i].height, meta[i].channels, encrypted.data(), meta[i].width * meta[i].channels);
 
     }
@@ -177,8 +188,6 @@ GLuint  load_img(const char* path)
 {
     int w, h, c;
     unsigned char* data_p = stbi_load(path, &w, &h, &c, 0);
-
-   
     GLuint tex;
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
@@ -191,10 +200,36 @@ GLuint  load_img(const char* path)
     stbi_image_free(data_p);
     return tex;
 }
+int split_imgs_to_dirs(const char* path,int chunk_size)
+{
+    namespace fs = std::filesystem;
+    //create dirs number of directories and move chunk_size of images to each one till eod
+    std::vector<fs::path> files;
+    for (const auto& input : fs::directory_iterator(path))
+    {
+        files.push_back(input.path());
+    }
+    size_t count = files.size();
+    int dirs = std::ceil(count / chunk_size);
+    for (int i = 0;i < dirs;i++)
+    {
+        fs::create_directory("f_"+std::to_string(i));
+    }
+    for (int i = 0;i < files.size();i++)
+    {
+        int index = i / chunk_size;
+        fs::path dest = "f_" + std::to_string(index) + "/" + files[i].filename().string();
+        fs::rename(files[i],dest);
+    }
+    std::cout << dirs;
+    return dirs;
+}
 //FOR IMAGE loading to ui
-unsigned int tex_before = 0;
-unsigned int tex_after = 0;
+unsigned int tex2 = 0;
+unsigned int tex1 = 0;
 int main() {
+    namespace fs = std::filesystem;
+    int dirs = 0;
 
     glfwInit();
     GLFWwindow* window = glfwCreateWindow(600, 600, "Compute", NULL, NULL);
@@ -229,25 +264,51 @@ int main() {
         {
             ImGui::Text("Loading Function Pointers from driver failed");
         }
+        if (path_wrong_imag)
+        {
+            ImGui::Text("Path Entered for images is invalid");
+        }
         ImGui::End();
         static char encrypt_path[256] = "";
         static char decrypt_path[256] = "";
         static char key_path[256] = "";
-
+        static int chunk_size = 0;
         ImGui::InputText("Encrypt Path", encrypt_path, 256);
-
+        ImGui::InputInt("Enter chunk_size", &chunk_size);
         if (ImGui::Button("Encrypt"))
         {
-            encrypt(encrypt_path);
+            
+            //std::vector<std::string> folders = split_images(encrypt_path);
+            dirs = split_imgs_to_dirs(encrypt_path, chunk_size);
+            fs::create_directory("en_files");
+            fs::create_directory("key_files");
+            int gl = 0;
+            for (int i = 0;i < dirs;i++) {
+                std::string dir = "f_" + std::to_string(i);
+                encrypt(dir.c_str(), i,gl);
+            }
         }
 
         ImGui::Separator();
         ImGui::Begin("Decrypt");
-        ImGui::InputText("Decrypt Path", decrypt_path, 256);
-        ImGui::InputText("Key Path", key_path, 256);
+        ImGui::InputText("Decrypt folder Path", decrypt_path, 256);
+        ImGui::InputText("Keys Path", key_path, 256);
         if (ImGui::Button("Decrypt"))
         {
-            decrypt(decrypt_path, key_path);
+            std::cout << "out";
+
+            std::string temp_d = decrypt_path;
+            std::string temp_k = key_path;
+            int gl = 0;
+
+            for (int i = 0; i < std::distance(
+                fs::directory_iterator(decrypt_path),
+                fs::directory_iterator{});i++)
+            {
+                std::string file_path = temp_d + "/" + std::to_string(i) + ".cb";
+                std::string key_file = temp_k + "/" + std::to_string(i) + "_key.bin";
+                decrypt(file_path.c_str(), key_file.c_str(),gl);
+            }
         }
         ImGui::End();
         
@@ -257,14 +318,35 @@ int main() {
         ImGui::Text("3>Make sure the dirctory is filled with only  images as the current setup uses stbi_load at its core to load images into a buffer.");
         ImGui::End();
         
-        if (tex_before == 0)
+        if (tex1 == 0)
         {
-            GLuint tex_before = load_img("before.jpg");
-            GLuint tex_after = load_img("after.png");
+            int w, h, c;
+            unsigned char* data_p = stbi_load("before.jpg", &w, &h, &c, 0);
+            glGenTextures(1, &tex1);
+            glBindTexture(GL_TEXTURE_2D, tex1);
+            GLenum format = (c == 4) ? GL_RGBA : GL_RGB;
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, data_p);
+            stbi_image_free(data_p);
+            data_p = stbi_load("after.png", &w, &h, &c, 0);
+            glGenTextures(1, &tex2);
+            glBindTexture(GL_TEXTURE_2D, tex2);
+            format = (c == 4) ? GL_RGBA : GL_RGB;
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, data_p);
+            stbi_image_free(data_p);
         }
         ImGui::Begin("Example");
-        ImGui::Text("Before decryption in buffer:");
-        ImGui::Image((void *)(intptr_t)tex_before,ImVec2(200,200));
+        ImGui::Text("Before encryption in buffer:");
+        ImGui::Image((void *)(intptr_t)tex1,ImVec2(200,200));
+        ImGui::Text("After  encryption in buffer:");
+        ImGui::Image((void*)(intptr_t)tex2, ImVec2(200, 200));
         ImGui::End();
         ImGui::Render();
         glClearColor(1.0f, 1.0f, 1.0f, 1.0);

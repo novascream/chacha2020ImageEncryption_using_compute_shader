@@ -14,11 +14,19 @@ public:
 	std::vector<Image> img_Meta;
 	std::vector<uint8_t> buffer;
 	int padded = 0;
+	bool path_wrong = false;
 	image_loader(const char* path)
 	{
 		namespace fs = std::filesystem;
 		size_t final_size = 0;
 		size_t offset = 0;
+		std::error_code ec;
+		auto it = fs::directory_iterator(path,ec);
+		if (ec)
+		{
+			path_wrong = true;
+			return;
+		}
 		for (const auto& input : fs::directory_iterator(path))
 		{
 			std::string temp_img_path = input.path().string();

@@ -26,36 +26,33 @@ Multiple images are packed into a single contiguous memory block and encrypted s
 
 ---
 
-## Architecture
 
+### Description
 
+- **Input Images**  
+  Directory containing raw image files (PNG/JPEG).
 
+- **CPU: Image Loader (stb_image)**  
+  Decodes images into raw byte buffers.
 
-[Input Images]
-│
-▼
-[CPU: Image Loader — stb_image]
-│
-▼
-[CPU: Buffer Packing + Metadata]
-│
-▼
-[GPU: SSBO Upload]
-│
-▼
-[GPU: ChaCha20 Compute Shader]
-│
-▼
-[CPU: Readback]
-│
-▼
-[Encrypted .cb File + Metadata]
+- **CPU: Buffer Packing + Metadata Generation**  
+  Packs all images into a single contiguous buffer and generates metadata (offsets, sizes, dimensions).
 
+- **GPU: SSBO Upload**  
+  Transfers the packed buffer to GPU memory using Shader Storage Buffer Objects.
 
+- **GPU: ChaCha20 Compute Shader Execution**  
+  Parallel encryption using ChaCha20 (XOR keystream per block).
 
-> Decryption follows the identical pipeline with the same key + nonce.
+- **CPU: Readback from GPU**  
+  Retrieves encrypted buffer from GPU memory.
 
----
+- **Encrypted `.cb` File + Metadata**  
+  Stores:
+  - Image count  
+  - Metadata array  
+  - Encrypted buffer  
+
 
 ## Tech Stack
 
@@ -125,12 +122,6 @@ XOR is self-inverse — the same shader execution with the same key + nonce reve
 - [ ] AEAD support (ChaCha20-Poly1305)
 - [ ] Asynchronous GPU transfers (PBOs)
 - [ ] Improved file format and metadata handling
-- [ ] XChaCha20 support
-- [ ] Multi-GPU execution
-- [ ] DirectStorage integration
-- [ ] Video stream encryption
-- [ ] Performance benchmarking suite
-- [ ] Cross-platform packaging
 
 ---
 
@@ -153,3 +144,4 @@ This project is intended as:
 - A **systems + GPU compute** exploration
 - A practical implementation of **stream ciphers on programmable GPU hardware**
 - A foundation for building high-performance encryption tooling
+- For now the system can encrypt upto 200-500mbs/s  in rtx 3050 6GB Vram

@@ -1,7 +1,7 @@
 # GPU-Aided Bulk Image Encryption
 ### ChaCha20 × OpenGL Compute Shaders
 
-> **Status:** Prototype — actively developed. Tested on RTX 3050 6GB hitting 200–500 MB/s throughput.
+> **Status:** Working application done. Tested on RTX 3050 6GB hitting 200–500 MB/s throughput.
 
 ---
 

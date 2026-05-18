@@ -153,14 +153,7 @@ Open `chacha.sln` in Visual Studio 2022, set to Release x64, build.
 
 ---
 
-## Roadmap
 
-- [ ] ChaCha20-Poly1305 (AEAD — integrity + encryption)
-- [ ] Asynchronous GPU transfers (PBOs) to overlap upload/compute/readback
-- [ ] Password-protected key archive export
-- [ ] CMakeLists.txt cleanup + cross-platform dependency handling
-
----
 
 ## Build Requirements
 

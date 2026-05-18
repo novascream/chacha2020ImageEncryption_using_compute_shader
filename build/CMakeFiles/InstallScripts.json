@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/nova/Stuff/chacha2020ImageEncryption_using_compute_shader/build/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

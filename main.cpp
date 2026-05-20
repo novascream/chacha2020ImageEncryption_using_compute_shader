@@ -20,6 +20,8 @@
 #include <string>
 #include<filesystem>
 
+//COMPLETE REWORK HAS BEEN DONE.
+
 bool file_err1 = false;
 bool file_err2 = false;
 bool path_wrong_imag = false;
